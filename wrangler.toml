@@ -1,0 +1,7 @@
+name = "telegraph-news"
+main = "worker.js"
+compatibility_date = "2025-06-01"
+
+# NewsWire news miner for Telegraph. Serves NEWS_HEADLINES (/headlines) and NEWS_SEARCH
+# (/news) from Google News RSS and the HackerNews Algolia API, keyless. No secrets, no
+# bindings: deploy is a bare `wrangler deploy`.

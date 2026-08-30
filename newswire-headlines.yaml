@@ -1,0 +1,134 @@
+version: "1"
+kind: miner
+id: 7328
+slug: newswire-headlines
+protocol: generic
+name: NewsWire Top Headlines
+description: >
+  Top current news headlines for a topic or category, read live from Google News RSS at
+  request time. Name a topic such as bitcoin, ai or elections and it returns the single
+  leading headline in one sentence, then the top five with source and publish date. With
+  no topic it falls back to the Google News top-stories feed. No API key, nothing cached
+  that can go stale.
+base_url: https://telegraph-news.margyn.workers.dev
+
+docs:
+  documentation: https://telegraph-news.margyn.workers.dev/
+  repository: https://github.com/zkasuran/telegraph-newswire-miner
+
+limitations:
+  - code: MAX_PARAM_VALUE
+    message: topic is a subject or category such as bitcoin, technology or "world news". A whole question is accepted too. An empty topic returns top stories.
+    param: topic
+    property: length
+    value_num: 120
+    operator: lte
+
+rate_limit_per_sec: 2
+cache_ttl_sec: 10
+circuit_threshold: 5
+circuit_cooldown_seconds: 30
+
+input_schema:
+  type: object
+  properties:
+    question:
+      type: string
+      description: >
+        The full natural-language question, verbatim, for example "What are the top
+        headlines about bitcoin today?". The miner reads the topic from it, so passing
+        the whole question works as well as naming the topic.
+    topic:
+      type: string
+      description: Subject or category to report headlines for, for example bitcoin, technology or elections. Leave empty for top stories.
+
+output_schema:
+  type: object
+  properties:
+    topic:
+      type: string
+      description: Topic the headlines are for ("top stories" when none was given).
+    headline:
+      type: string
+      description: Title of the single leading headline.
+    source:
+      type: string
+      description: Publisher of the leading headline.
+    url:
+      type: string
+      description: Link to the leading headline.
+    published_at:
+      type: string
+      description: Publish date of the leading headline, stated as the feed gives it.
+    published_unix:
+      type: integer
+      description: Publish time of the leading headline as a Unix timestamp in seconds.
+    result_count:
+      type: integer
+      description: Number of headlines returned in the readings, up to five.
+    articles:
+      type: array
+      description: The top headlines, each with title, source, url and publish date.
+    confidence:
+      type: number
+      description: 0.96 for a fresh feed read, 0.9 when a topic returns no headlines.
+    summary:
+      type: string
+      description: One sentence naming the leading headline, then Readings listing the top five with source and date.
+    source_feed:
+      type: string
+      description: Which Google News feed produced the answer.
+    as_of:
+      type: string
+      description: ISO 8601 timestamp of the read.
+
+endpoints:
+  - path: /headlines
+    external_path: /headlines
+    method: GET
+    description: >
+      Top headlines for one topic, topic as a query parameter (?topic=bitcoin). Also
+      accepts a whole question in ?question= or ?query=. Returns top stories when no
+      topic is given.
+
+semantics:
+  signal_mapping:
+    confidence_field: confidence
+    label_field: summary
+    reason_field: summary
+  supported_intents:
+    - NEWS_HEADLINES
+
+on_chain:
+  transform: direct
+  min_price_usdc: 0.01
+  fields:
+    strings:
+      - index: 0
+        name: topic
+        description: Topic the headlines are for ("top stories" when none was given).
+        source_path: topic
+      - index: 1
+        name: source
+        description: Publisher of the leading headline.
+        source_path: source
+      - index: 2
+        name: summary
+        description: One sentence with the leading headline, then Readings listing the top five.
+        source_path: summary
+    integers:
+      - index: 0
+        name: result_count
+        description: Number of headlines returned in the readings.
+        source_path: result_count
+        multiplier: 1
+      - index: 1
+        name: published_unix
+        description: Publish time of the leading headline as a Unix timestamp in seconds.
+        source_path: published_unix
+        multiplier: 1
+  request:
+    - endpoint: headlines
+      method: GET
+      query_params:
+        topic: { source: strings.0 }

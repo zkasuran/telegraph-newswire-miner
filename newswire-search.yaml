@@ -1,0 +1,132 @@
+version: "1"
+kind: miner
+id: 7329
+slug: newswire-search
+protocol: generic
+name: NewsWire News Search
+description: >
+  The most relevant recent article for a search query, read live at request time. Google
+  News RSS search is the primary source and the HackerNews Algolia API is a tech fallback
+  when Google News returns nothing. It returns the top match in one sentence, then the top
+  five results with source, link and date. No API key, nothing cached that can go stale.
+base_url: https://telegraph-news.margyn.workers.dev
+
+docs:
+  documentation: https://telegraph-news.margyn.workers.dev/
+  repository: https://github.com/zkasuran/telegraph-newswire-miner
+
+limitations:
+  - code: MAX_PARAM_VALUE
+    message: query is a search phrase such as "ai regulation" or "opensource funding". A whole question is accepted too. An empty query defaults to technology.
+    param: query
+    property: length
+    value_num: 200
+    operator: lte
+
+rate_limit_per_sec: 2
+cache_ttl_sec: 10
+circuit_threshold: 5
+circuit_cooldown_seconds: 30
+
+input_schema:
+  type: object
+  properties:
+    question:
+      type: string
+      description: >
+        The full natural-language question, verbatim, for example "What is the latest news
+        on AI regulation?". The miner reads the query from it, so passing the whole
+        question works as well as naming the search term.
+    query:
+      type: string
+      description: Search phrase to find news for, for example "ai regulation" or "electric vehicles". Leave empty for technology.
+
+output_schema:
+  type: object
+  properties:
+    query:
+      type: string
+      description: Search phrase the answer is for.
+    headline:
+      type: string
+      description: Title of the top matching article.
+    source:
+      type: string
+      description: Publisher of the top matching article.
+    url:
+      type: string
+      description: Link to the top matching article.
+    published_at:
+      type: string
+      description: Publish date of the top match, stated as the source gives it.
+    published_unix:
+      type: integer
+      description: Publish time of the top match as a Unix timestamp in seconds.
+    result_count:
+      type: integer
+      description: Number of results returned in the readings, up to five.
+    articles:
+      type: array
+      description: The top results, each with title, source, url and publish date.
+    confidence:
+      type: number
+      description: 0.96 for a Google News read, 0.95 for the HackerNews fallback, 0.9 for no results.
+    summary:
+      type: string
+      description: One sentence naming the top match, then Readings listing the top five with source, link and date.
+    source_feed:
+      type: string
+      description: Which feed produced the answer, Google News or HackerNews Algolia.
+    as_of:
+      type: string
+      description: ISO 8601 timestamp of the read.
+
+endpoints:
+  - path: /news
+    external_path: /news
+    method: GET
+    description: >
+      News search for one query, query as a parameter (?q=ai+regulation or ?query=).
+      Also accepts a whole question in ?question=. Defaults to technology when empty.
+
+semantics:
+  signal_mapping:
+    confidence_field: confidence
+    label_field: summary
+    reason_field: summary
+  supported_intents:
+    - NEWS_SEARCH
+
+on_chain:
+  transform: direct
+  min_price_usdc: 0.01
+  fields:
+    strings:
+      - index: 0
+        name: query
+        description: Search phrase the answer is for.
+        source_path: query
+      - index: 1
+        name: source
+        description: Publisher of the top matching article.
+        source_path: source
+      - index: 2
+        name: summary
+        description: One sentence with the top match, then Readings listing the top five.
+        source_path: summary
+    integers:
+      - index: 0
+        name: result_count
+        description: Number of results returned in the readings.
+        source_path: result_count
+        multiplier: 1
+      - index: 1
+        name: published_unix
+        description: Publish time of the top match as a Unix timestamp in seconds.
+        source_path: published_unix
+        multiplier: 1
+  request:
+    - endpoint: news
+      method: GET
+      query_params:
+        query: { source: strings.0 }

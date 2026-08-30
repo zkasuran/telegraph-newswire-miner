@@ -1,0 +1,62 @@
+This miner serves data from third parties. Their terms travel with it.
+
+Each block below names one upstream, what it provides, the licence it publishes under, and the
+exact credit line that licence requires. Every credit line marked required also travels in the
+`attribution` field of every answer this miner returns, not only in this file.
+
+## globalvoices.org
+
+Global civic reporting.
+
+Licence: CC BY 3.0
+
+In the provider's own words: "all content created by Global Voices is published under a Creative Commons Attribution-Only license"; reusers may "remix, transform, and build upon the material for any purpose, even commercially".
+
+Required credit line:
+
+    Reporting from Global Voices, CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/).
+
+## en.wikinews.org
+
+Volunteer-written news reports.
+
+Licence: CC BY 4.0 for anything published after 16 December 2024.
+
+In the provider's own words: "Creative Commons Attribution 4.0 License"; material "may be attributed to \"Wikinews\"".
+
+Required credit line:
+
+    Reporting from Wikinews, CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
+
+## ec.europa.eu
+
+European Commission press releases.
+
+Licence: CC BY 4.0
+
+In the provider's own words: "content owned by the EU on this website is licensed under the" "Creative Commons Attribution 4.0 International (CC BY 4.0)"; "reuse is allowed, provided appropriate credit is given and changes are indicated".
+
+Required credit line:
+
+    Press releases (C) European Union, CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), summarised here.
+
+## www.nasa.gov, www.nist.gov, www.nsf.gov, www.energy.gov
+
+Science and technology news releases.
+
+Licence: No copyright: works of the United States Government.
+
+Required credit line:
+
+    News releases from United States Government agencies, which carry no copyright.
+
+## feeds.bbci.co.uk and feeds.npr.org
+
+Formerly the headline source.
+
+Licence: No licence for reuse.
+
+In the provider's own words: BBC Terms of Use 15a: "You're not allowed to pluck metadata from our content or RSS feeds". The NPR feed ships "Copyright 2024 NPR - For Personal Use Only".
+
+No credit line is required by this source.
+
