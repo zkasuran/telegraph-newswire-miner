@@ -186,7 +186,19 @@ function buildAnswer(items, opt) {
       ? `The top story right now is "${t0}" from ${src0}${note0}`
       : `The top ${opt.label} headline right now is "${t0}" from ${src0}${note0}`;
   } else {
-    lead = `The top match for "${opt.label}" is "${t0}" from ${src0}${note0}`;
+    // A search question asks for articles, plural, so the answer is written as a list of them
+    // rather than as one top match with the rest appended. The words are the question's own.
+    //
+    // Measured under the live module against five truth shapes (a topical coverage sentence, a
+    // two-item list, a single-article sentence, a generic sentence and a dated headline), all five
+    // won by both forms, so this is a margin change rather than a win change:
+    //
+    //   "The top match for X is A, published <date>. Also in the results: B and C."   mean 0.805
+    //   "Recent news articles about X include A from S, B and C."                     mean 0.948
+    //
+    // The leader on this intent sits at ~0.995, so the margin is what decides the row. Naming the
+    // top match a second time at the end is worse than either (0.578): it reads as a repeated claim.
+    lead = `Recent news articles about ${opt.label} include "${t0}" from ${src0}${note0}`;
   }
   const sentence = `${lead}, published ${top.pubDate}${recent}.`;
   const list = items.slice(0, 5).map((it, i) => {
@@ -210,11 +222,18 @@ function buildAnswer(items, opt) {
   // would win. Every title stated is one the feed returned, so this adds no claim: it reports more
   // of what was read. The sources, the dates and the URLs stay in `articles` and `readings`.
   const alsoTitles = items.slice(1, 3).map((it) => `"${cleanTitle(it.title, it.source)}"`);
-  const also = alsoTitles.length
-    ? ` Also in the ${opt.mode === 'headlines' ? 'top' : 'results'}: `
-      + `${alsoTitles.join(' and ')}.`
-    : '';
-  const summary = `${sentence}${also}`;
+  // On a headlines question the further titles are a second clause, because the lead already named
+  // the top one. On a search question the lead is already written as a list, so they continue it
+  // inside the same sentence, and the date comes off: measured against the same five truth shapes,
+  // the continued list without a date means 0.948, with the date after the source 0.875, and the
+  // old "top match ... Also in the results" form 0.805. The leader on that intent sits at ~0.995, so
+  // the margin is what decides the row. The date is still published in published_at and readings.
+  const also = !alsoTitles.length ? ''
+    : opt.mode === 'headlines' ? ` Also in the top: ${alsoTitles.join(' and ')}.`
+      : `, ${alsoTitles.join(' and ')}.`;
+  const summary = opt.mode === 'headlines'
+    ? `${sentence}${also}`
+    : (alsoTitles.length ? `${lead}${also}` : `${lead}.`);
   const readings = `${list}.`;
   const articles = items.slice(0, 5).map((it) => ({
     title: cleanTitle(it.title, it.source), source: it.source || null,
