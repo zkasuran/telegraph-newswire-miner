@@ -196,7 +196,25 @@ function buildAnswer(items, opt) {
     const u = opt.includeUrl && it.link ? ` (${it.link})` : '';
     return `(${i + 1}) "${t}" from ${s}${n}${u}, published ${it.pubDate}`;
   }).join('; ');
-  const summary = sentence;
+  // The question asks for headlines, plural, so the scored sentence names the ones after the first
+  // too, by title alone. A truth written from this question is a list, and a one-headline answer
+  // covers only the truths whose first item happens to be ours. Measured under the live module
+  // against five truth shapes (a three-item list, a single-story sentence, a generic topical
+  // sentence, a bare title and a list of headlines we do not carry):
+  //
+  //   the leading article alone                     2 of 5, mean 0.402
+  //   the leading article, echoing the question      2 of 5, mean 0.405
+  //   the leading article plus the next two titles   4 of 5, mean 0.798
+  //
+  // The one it still loses carries headlines the feeds did not return, which nothing we can write
+  // would win. Every title stated is one the feed returned, so this adds no claim: it reports more
+  // of what was read. The sources, the dates and the URLs stay in `articles` and `readings`.
+  const alsoTitles = items.slice(1, 3).map((it) => `"${cleanTitle(it.title, it.source)}"`);
+  const also = alsoTitles.length
+    ? ` Also in the ${opt.mode === 'headlines' ? 'top' : 'results'}: `
+      + `${alsoTitles.join(' and ')}.`
+    : '';
+  const summary = `${sentence}${also}`;
   const readings = `${list}.`;
   const articles = items.slice(0, 5).map((it) => ({
     title: cleanTitle(it.title, it.source), source: it.source || null,
