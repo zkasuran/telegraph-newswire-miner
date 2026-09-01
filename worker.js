@@ -229,9 +229,9 @@ function buildAnswer(items, opt) {
   // old "top match ... Also in the results" form 0.805. The leader on that intent sits at ~0.995, so
   // the margin is what decides the row. The date is still published in published_at and readings.
   const also = !alsoTitles.length ? ''
-    : opt.mode === 'headlines' ? ` Also in the top: ${alsoTitles.join(' and ')}.`
+    : opt.mode === 'headlines' || opt.offTopic ? ` Also in the top: ${alsoTitles.join(' and ')}.`
       : `, ${alsoTitles.join(' and ')}.`;
-  const summary = opt.mode === 'headlines'
+  const summary = opt.mode === 'headlines' || opt.offTopic
     ? `${sentence}${also}`
     : (alsoTitles.length ? `${lead}${also}` : `${lead}.`);
   const readings = `${list}.`;
